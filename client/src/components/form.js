@@ -13,6 +13,8 @@ import CardContent from '@material-ui/core/CardContent';
 // import CardMedia from '@material-ui/core/CardMedia';
 // import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
+import Autocomplete from '@material-ui/lab/Autocomplete';
+import TextField from '@material-ui/core/TextField';
 
 
 const useStyles = theme => ({
@@ -38,11 +40,17 @@ const useStyles = theme => ({
 
 class SearchForm extends Component {
 
-    state = { "query": "", "isSubmit": false };
+    state = { "query": "", "isSubmit": false, suggestedData:[] };
 
-    onChangeHandler = (e) => {
-        this.setState({ "query": e.target.value })
-        // console.log("in change ", e.target.value);
+    onChangeHandler = (e, val=null) => {
+        if(val===null){
+            this.setState({ "query": e.target.value })
+            console.log("in change ", e.target.value);
+        }
+        else{
+            this.setState({query:val});
+            console.log("in change ", val);
+        }
     }
 
     onFormSubmit = async (e) => {
@@ -57,11 +65,17 @@ class SearchForm extends Component {
             }
 
             const result = await axios.post("http://localhost:8000/search/get-docs/", body, header);
-            console.log(result.data);
+            // console.log(result.data);
             this.setState({ "result": result.data, isSubmit: true });
 
         }
         // console.log("form data is ", this.state.query);
+    }
+
+    componentDidMount = async() =>{
+        const result = await axios.get("http://localhost:8000/search/get-suggested-data/")
+        // console.log("result is ", result);
+        this.setState({suggestedData:result.data.data})
     }
 
     render() {
@@ -79,12 +93,31 @@ class SearchForm extends Component {
                         style={this.state.isSubmit ? { minHeight: '20vh' } : { minHeight: '100vh' }}>
                         <Grid item xs={3}>
                             <Paper className={classes.root}>
-                                <InputBase
+                                {/* <InputBase
                                     className={classes.input}
                                     placeholder="Enter query"
                                     fullWidth
                                     value={this.state.query}
                                     onChange={this.onChangeHandler}
+                                /> */}
+                                <Autocomplete
+                                    className={classes.input}
+                                    freeSolo
+                                    id="free-solo-2-demo"
+                                    disableClearable
+                                    options={this.state.suggestedData.map((option) => option.title)}
+                                    onChange={(event, value)=>this.onChangeHandler(event, value)}
+                                    renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Enter query"
+                                        margin="normal"
+                                        variant="outlined"
+                                        value={this.state.query}
+                                        onChange={this.onChangeHandler}
+                                        InputProps={{ ...params.InputProps, type: 'search' }}
+                                    />
+                                    )}
                                 />
                                 <IconButton className={classes.iconButton} aria-label="search">
                                     <SearchIcon />

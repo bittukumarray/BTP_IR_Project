@@ -235,14 +235,38 @@ def userQuery(titleText):
     cleanText=[]
 
     #creating words dictionary with documents ids.
+
+    graph_data=""
+    with open(os.path.join(module_dir, 'per_word_knowledge_graph.json')) as f:
+        graph_data = json.load(f)
+    total=0
+    for word in titleTextTemp:
+        try:
+            total+=len(graph_data[word.lemma_])
+        except:
+            pass
+
+    print("total is ", total)
     length = len(titleTextTemp)
     clean_dict={}
     for word in titleTextTemp:
         cleanText.append(word.lemma_)
         try:
             clean_dict[word.lemma_]+=1/length
+            try:
+                clean_dict[word.lemma_]=clean_dict[word.lemma_]+len(graph_data[word.lemma_])/total
+            except:
+                pass
+            if clean_dict[word.lemma_]>1:
+                clean_dict[word.lemma_]=1
         except:
             clean_dict[word.lemma_]=1/length
+            try:
+                clean_dict[word.lemma_]=clean_dict[word.lemma_]+len(graph_data[word.lemma_])/total
+            except:
+                pass
+            if clean_dict[word.lemma_]>1:
+                clean_dict[word.lemma_]=1
     
     # print(cleanText)
     return {"cleantext":cleanText, "cleandict":clean_dict}
@@ -258,3 +282,12 @@ def get_Docs(cleanInp, words_dict_file):
             pass
     
     return set(docs_list)
+
+
+
+class getSuggestData(APIView):
+    def get(self, request):
+        data=""
+        with open(os.path.join(module_dir, 'sof20k.json')) as f:
+            data = json.load(f)
+        return Response({"data":data})
